@@ -10,9 +10,83 @@ interface TautulliResponse<T> {
   };
 }
 
+export interface TautulliTableResponse<T> {
+  recordsFiltered: number;
+  recordsTotal: number;
+  total_duration: string;
+  filter_duration: string;
+  data: T[];
+}
+
 export interface TautulliServerStatus {
   result: string;
   connected: boolean;
+}
+
+export interface TautulliHistoryItem {
+  id: number | null;
+  date: number;
+  duration: number;
+  friendly_name: string;
+  full_title: string;
+  grandparent_rating_key: number | null;
+  grandparent_title: string;
+  original_title: string;
+  group_count: number | null;
+  group_ids: string | null;
+  guid: string;
+  ip_address: string;
+  live: number;
+  machine_id: string;
+  media_index: number | null;
+  media_type: string;
+  originally_available_at: string | null;
+  parent_media_index: number | null;
+  parent_rating_key: number | null;
+  parent_title: string;
+  paused_counter: number;
+  percent_complete: number;
+  platform: string;
+  product: string;
+  player: string;
+  rating_key: number;
+  reference_id: number;
+  row_id: number | null;
+  session_key: number | null;
+  started: number;
+  state: string;
+  stopped: number;
+  thumb: string | null;
+  title: string;
+  transcode_decision: string;
+  user: string;
+  user_id: number;
+  watched_status: number;
+  year: number | null;
+  location: string;
+  relayed: number;
+  secure: number;
+  user_thumb: string | null;
+}
+
+export interface TautulliUser {
+  allow_guest: number;
+  deleted_user: boolean;
+  do_notify: number;
+  email: string | null;
+  friendly_name: string;
+  is_active: number;
+  is_admin: number;
+  is_allow_sync: number;
+  is_home_user: number;
+  is_restricted: number;
+  keep_history: number;
+  last_seen: number;
+  row_id: number;
+  shared_libraries: string[] | string;
+  user_id: string;
+  user_thumb: string | null;
+  username: string;
 }
 
 // Tautulli API client
@@ -25,7 +99,10 @@ export class TautulliClient {
     this.apiKey = config.TAUTULLI_API_KEY;
   }
 
-  private async request<T>(command: string): Promise<T> {
+  private async request<T>(
+    command: string,
+    params: Record<string, string | number | boolean | undefined> = {},
+  ): Promise<T> {
     const url = new URL("/api/v2", `${this.baseUrl}/`);
 
     url.searchParams.set("apikey", this.apiKey);
@@ -52,5 +129,41 @@ export class TautulliClient {
 
   async getServerStatus(): Promise<TautulliServerStatus> {
     return this.request<TautulliServerStatus>("server_status");
+  }
+
+  /**
+   * Retrieve playback history.
+   *
+   * Tautulli's get_history endpoint is paginated. This function continues requesting
+   * pages until the complete filtered result set has been collected.
+   */
+  async getHistory(): Promise<TautulliHistoryItem[]> {
+    const history: TautulliHistoryItem[] = [];
+
+    const pageSize = 1000;
+    let start = 0;
+
+    while (true) {
+      const result = await this.request<
+        TautulliTableResponse<TautulliHistoryItem>
+      >("get_history", {
+        start,
+        length: pageSize,
+      });
+
+      history.push(...result.data);
+
+      if (result.data.length < pageSize) {
+        break;
+      }
+
+      start += pageSize;
+    }
+
+    return history;
+  }
+
+  async getUsers(): Promise<TautulliUser[]> {
+    return this.request<TautulliUser[]>("get_users");
   }
 }

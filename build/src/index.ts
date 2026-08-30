@@ -1,4 +1,4 @@
-import { runSetup } from "./cli/setup.js";
+import { runSetup } from "./cli/build.js";
 
 function main() {
   runSetup();
