@@ -89,6 +89,19 @@ export interface TautulliUser {
   username: string;
 }
 
+export interface TautulliServerInfo {
+  pms_identifier: string;
+  pms_ip: string;
+  pms_name: string;
+  pms_platform: string;
+  pms_plexpass: number;
+  pms_port: number;
+  pms_ssl: number;
+  pms_url: string;
+  pms_url_manual: number;
+  pms_version: string;
+}
+
 // Tautulli API client
 export class TautulliClient {
   private readonly baseUrl: string;
@@ -129,6 +142,10 @@ export class TautulliClient {
 
   async getServerStatus(): Promise<TautulliServerStatus> {
     return this.request<TautulliServerStatus>("server_status");
+  }
+
+  async getServerInfo(): Promise<TautulliServerInfo> {
+    return this.request<TautulliServerInfo>("server_info");
   }
 
   /**
