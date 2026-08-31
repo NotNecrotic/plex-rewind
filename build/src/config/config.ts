@@ -24,7 +24,7 @@ export async function loadConfig(id: string): Promise<RewindConfig | null> {
   let config: string;
 
   try {
-    config = await readFile(join(buildDir(), id), "utf8");
+    config = await readFile(join(buildDir(), id, "config.json"), "utf8");
   } catch (error) {
     const code = (error as NodeJS.ErrnoException)?.code;
     if (code === "ENOENT") {
@@ -36,7 +36,9 @@ export async function loadConfig(id: string): Promise<RewindConfig | null> {
   try {
     return JSON.parse(config) as RewindConfig;
   } catch {
-    throw new Error(`Invalid config file: ${join(buildDir(), id)}`);
+    throw new Error(
+      `Invalid config file: ${join(buildDir(), id, "config.json")}`,
+    );
   }
 }
 

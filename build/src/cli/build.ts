@@ -179,6 +179,8 @@ export async function runSetup() {
     required: true,
   });
 
+  outro();
+
   if (isCancel(chosenScenes)) exit();
 
   const rewindConfig: RewindConfig = {
@@ -195,5 +197,5 @@ export async function runSetup() {
 
   await saveConfig(rewindConfig, String(year));
 
-  generateRewind(year);
+  generateRewind(year.toString());
 }
