@@ -8,8 +8,9 @@ import {
   multiselect,
 } from "@clack/prompts";
 import { TautulliClient } from "../collectors/tautulli.js";
-import { buildDir, type RewindConfig, saveConfig } from "../config/config.js";
+import { type RewindConfig, saveConfig } from "../config/config.js";
 import { scenes } from "../scenes/scenes.js";
+import { generateRewind } from "../generateRewind.js";
 
 const banner = `
 ██████╗ ██╗     ███████╗██╗  ██╗    ██████╗ ███████╗██╗    ██╗██╗███╗   ██╗██████╗ 
@@ -193,4 +194,6 @@ export async function runSetup() {
   };
 
   await saveConfig(rewindConfig, String(year));
+
+  generateRewind(year);
 }

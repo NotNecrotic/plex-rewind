@@ -9,10 +9,6 @@ const schema = z.object({
 
 let config: z.infer<typeof schema>;
 
-try {
-  config = schema.parse(process.env);
-} catch (error) {
-  console.error(error);
-}
+config = schema.parse(process.env);
 
 export { config };

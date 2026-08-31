@@ -2,7 +2,6 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { join } from "node:path";
 import { config } from "./env.js";
-import { env } from "node:process";
 
 export interface RewindConfig {
   id: string;
