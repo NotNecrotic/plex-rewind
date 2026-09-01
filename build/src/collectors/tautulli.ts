@@ -145,7 +145,7 @@ export class TautulliClient {
   }
 
   async getServerInfo(): Promise<TautulliServerInfo> {
-    return this.request<TautulliServerInfo>("server_info");
+    return this.request<TautulliServerInfo>("get_server_info");
   }
 
   /**

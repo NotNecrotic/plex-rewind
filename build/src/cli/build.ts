@@ -183,6 +183,13 @@ export async function runSetup() {
 
   if (isCancel(chosenScenes)) exit();
 
+  // Get Plex server name
+  s.start("Getting Media Server Name");
+  const tautulli = new TautulliClient();
+  const serverInfo = await tautulli.getServerInfo();
+  const serverName = serverInfo.pms_name;
+  s.stop("✓ Getting Media Server Name");
+
   const rewindConfig: RewindConfig = {
     id: String(year),
     year,
@@ -191,6 +198,7 @@ export async function runSetup() {
     startDate: startDate.toISOString(),
     endDate: endDate.toISOString(),
     liveDate: liveDate.toISOString(),
+    serverName: serverName,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

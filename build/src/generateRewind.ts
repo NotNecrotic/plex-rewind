@@ -1,4 +1,4 @@
-import { buildDir, loadConfig } from "./config/config.js";
+import { buildDir, loadConfig, saveConfig } from "./config/config.js";
 import { Requirement, type Scene } from "./scenes/types.js";
 import { scenes } from "./scenes/scenes.js";
 import { createSnapshot, type SnapshotTask } from "./snapshot.js";
@@ -108,10 +108,5 @@ export async function generateRewind(id: string): Promise<void> {
   s.stop("✓ Creating snapshot");
 
   // TODO: Filter users to only active.
-
-  // TODO: Set plex server name in the config (could this be done in build.ts with tautulli using get_server_info endpoint?).
-  console.log("server name")
-  const serverInfo = await
-
   // TODO: Download any needed assets and store them.
 }
