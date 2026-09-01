@@ -1,13 +1,23 @@
-import { buildDir, loadConfig, saveConfig } from "./config/config.js";
+import {
+  buildDir,
+  loadConfig,
+  saveConfig,
+  type RewindConfig,
+} from "./config/config.js";
 import { Requirement, type Scene } from "./scenes/types.js";
 import { scenes } from "./scenes/scenes.js";
 import { createSnapshot, type SnapshotTask } from "./snapshot.js";
 import { TautulliClient } from "./collectors/tautulli.js";
 import { intro, outro, spinner } from "@clack/prompts";
-import { readFile } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const collectors = [{ name: "tautulli", action: () => new TautulliClient() }];
+
+export interface GenerationContext {
+  config: RewindConfig;
+  user_id: string;
+}
 
 function resolveScenes(sceneStrings: string[]): Scene[] {
   const known = new Set<string>(scenes.map((def) => def.id));
@@ -82,6 +92,24 @@ export function createTasks(methods: string[]): SnapshotTask[] {
   });
 }
 
+export function buildRewind(
+  ctx: GenerationContext,
+  selectedScenes: Scene[],
+): Record<string, unknown> {
+  const scenesData: Record<string, unknown> = {};
+
+  return {
+    rewind: {
+      id: ctx.config.id,
+      year: ctx.config.year,
+      title: ctx.config.title,
+      liveDate: ctx.config.liveDate,
+      serverName: ctx.config.serverName ?? null,
+    },
+    scenes: scenesData,
+  };
+}
+
 export async function generateRewind(id: string): Promise<void> {
   const config = await loadConfig(id);
 
@@ -97,6 +125,7 @@ export async function generateRewind(id: string): Promise<void> {
 
   const s = spinner();
 
+  // Create snapshot
   s.start("Creating snapshot");
 
   const snapshot = await createSnapshot({
@@ -107,6 +136,23 @@ export async function generateRewind(id: string): Promise<void> {
 
   s.stop("✓ Creating snapshot");
 
-  // TODO: Filter users to only active.
+  // Determine eligible users
+  s.start("Finding eligible users");
+
+  const users = await readFile(
+    join(buildDir(), "tautulli/getUsers.json"),
+    "utf-8",
+  )
+    .then((data) => JSON.parse(data))
+    .catch((err) => {
+      throw new Error(`Failed to read users data: ${err.message}`);
+    });
+
+  // TODO: Update eligible users to include only those who have watched content in the specified time range.
+  const eligibleUsers = users.filter((user: any) => user.is_active);
+
+  s.stop("✓ Finding eligible users");
+
+  // TODO: Generate the rewind content based on the snapshot and eligible users.
   // TODO: Download any needed assets and store them.
 }
