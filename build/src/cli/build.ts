@@ -183,6 +183,7 @@ export async function runSetup() {
 
   if (isCancel(chosenScenes)) exit();
 
+  // TODO: Run at start along with API server checks.
   // Get Plex server name
   s.start("Getting Media Server Name");
   const tautulli = new TautulliClient();

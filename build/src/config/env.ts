@@ -4,6 +4,8 @@ import { z } from "zod";
 const schema = z.object({
   TAUTULLI_URL: z.url(),
   TAUTULLI_API_KEY: z.string().length(32),
+  PLEX_URL: z.string().url(),
+  PLEX_TOKEN: z.string().min(1),
   BUILD_DIR: z.string().min(1).default("./builds"),
 });
 

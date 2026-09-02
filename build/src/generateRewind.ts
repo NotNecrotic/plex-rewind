@@ -4,13 +4,19 @@ import {
   saveConfig,
   type RewindConfig,
 } from "./config/config.js";
-import { Requirement, type Scene } from "./scenes/types.js";
+import { Requirement, Scene } from "./scenes/types.js";
 import { scenes } from "./scenes/scenes.js";
 import { createSnapshot, type SnapshotTask } from "./snapshot.js";
-import { TautulliClient } from "./collectors/tautulli.js";
+import {
+  TautulliClient,
+  type TautulliHistoryItem,
+} from "./collectors/tautulli.js";
 import { intro, outro, spinner } from "@clack/prompts";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
+import path from "node:path";
+import { generateAssets } from "./assets.js";
+import { generateTopMovies } from "./generate/topMovies.js";
 
 const collectors = [{ name: "tautulli", action: () => new TautulliClient() }];
 
@@ -92,11 +98,51 @@ export function createTasks(methods: string[]): SnapshotTask[] {
   });
 }
 
-export function buildRewind(
+async function requireSnapshotFile<T>(
+  snapshotDir: string,
+  service: string,
+  method: string,
+): Promise<TautulliHistoryItem[]> {
+  const filePath = join(snapshotDir, service, `${method}.json`);
+  try {
+    const data = await readFile(filePath, "utf-8");
+    return JSON.parse(data) as TautulliHistoryItem[];
+  } catch (err) {
+    throw new Error(
+      `Failed to read snapshot file ${filePath}: ${(err as Error).message}`,
+    );
+  }
+}
+
+type SceneGenerator = (ctx: GenerationContext) => unknown;
+const sceneGenerators: Partial<Record<Scene, SceneGenerator>> = {
+  [Scene.TopMovies]: async (ctx) =>
+    generateTopMovies(
+      await requireSnapshotFile(
+        path.join(buildDir(), ctx.config.id, "snapshot"),
+        "tautulli",
+        "getHistory",
+      ),
+      Number(ctx.user_id),
+    ),
+};
+
+export async function buildRewind(
   ctx: GenerationContext,
-  selectedScenes: Scene[],
-): Record<string, unknown> {
+): Promise<Record<string, unknown>> {
   const scenesData: Record<string, unknown> = {};
+
+  const selectedScenes = resolveScenes(ctx.config.scenes);
+
+  for (const scene of selectedScenes) {
+    const generator = sceneGenerators[scene];
+
+    if (!generator) {
+      throw new Error(`No generator registered for scene "${scene}".`);
+    }
+
+    scenesData[scene] = await generator(ctx);
+  }
 
   return {
     rewind: {
@@ -140,7 +186,7 @@ export async function generateRewind(id: string): Promise<void> {
   s.start("Finding eligible users");
 
   const users = await readFile(
-    join(buildDir(), "tautulli/getUsers.json"),
+    join(buildDir(), config.id, "snapshot/tautulli/getUsers.json"),
     "utf-8",
   )
     .then((data) => JSON.parse(data))
@@ -150,9 +196,24 @@ export async function generateRewind(id: string): Promise<void> {
 
   // TODO: Update eligible users to include only those who have watched content in the specified time range.
   const eligibleUsers = users.filter((user: any) => user.is_active);
+  console.log(eligibleUsers.map((user: any) => user.username));
 
   s.stop("✓ Finding eligible users");
 
   // TODO: Generate the rewind content based on the snapshot and eligible users.
+  for (const user of eligibleUsers) {
+    const rewindJson = await buildRewind({ config, user_id: user.user_id });
+
+    const userDir = path.join(buildDir(), config.id, "users");
+    await mkdir(userDir, { recursive: true });
+
+    await writeFile(
+      path.join(userDir, `${user.user_id}.json`),
+      JSON.stringify(rewindJson, null, 2),
+      "utf-8",
+    );
+  }
+
   // TODO: Download any needed assets and store them.
+  await generateAssets(config.id, path.join(buildDir(), config.id));
 }
