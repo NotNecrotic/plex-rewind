@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "module": "esnext",
+    "lib": ["ES2023", "DOM"],
+    "types": ["vite/client"],
+    "allowArbitraryExtensions": true,
+    "skipLibCheck": true,
+    "ignoreDeprecations": "6.0",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@components": ["src/components"],
+      "@composables": ["src/composables"],
+      "@scenes": ["src/scenes"],
+      "@styles": ["src/styles"],
+      "@services": ["src/services"],
+      "@data": ["src/data"],
+      "@types": ["src/types"],
+      "@app": ["src/app"],
+      "@assets": ["src/assets"]
+    }
+  },
+  "include": ["src"]
+}
