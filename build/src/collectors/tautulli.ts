@@ -121,6 +121,17 @@ export class TautulliClient {
     url.searchParams.set("apikey", this.apiKey);
     url.searchParams.set("cmd", command);
 
+    for (const [key, value] of Object.entries(params)) {
+      if (value === undefined) {
+        continue;
+      }
+
+      url.searchParams.set(
+        key,
+        typeof value === "boolean" ? (value ? "1" : "0") : String(value),
+      );
+    }
+
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -156,8 +167,8 @@ export class TautulliClient {
    */
   async getHistory(): Promise<TautulliHistoryItem[]> {
     const history: TautulliHistoryItem[] = [];
-
     const pageSize = 1000;
+
     let start = 0;
 
     while (true) {
@@ -174,7 +185,7 @@ export class TautulliClient {
         break;
       }
 
-      start += pageSize;
+      start += result.data.length;
     }
 
     return history;
