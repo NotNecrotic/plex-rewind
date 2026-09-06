@@ -11,7 +11,7 @@ function cachedAvatarPath(plexId: number): string | null {
   for (const extension of ["png", "jpg", "gif", "webp"]) {
     const file = `${plexId}.${extension}`;
     if (existsSync(path.join(avatarsDirPath(), file))) {
-      return `/api/avatars/${file}`;
+      return `http://localhost:3000/api/avatars/${file}`;
     }
   }
   return null;
@@ -84,7 +84,7 @@ router.get("/plex/status/:id", async (req, res) => {
       });
 
       res.json({
-        status: "authorized",
+        status: "linked",
       });
 
       return;
