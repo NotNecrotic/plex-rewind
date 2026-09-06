@@ -4,12 +4,16 @@
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-text: var(--text);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
 }
 
 :root {
-  --background: #050507;
+  --background: #05050a;
   --surface: #0b0b10;
-  --text: #f5f3f7;
+  --text: #ffffff;
+  --primary: #e5a00d;
+  --secondary: #f96c57ff;
 }
 
 @utility grain {
