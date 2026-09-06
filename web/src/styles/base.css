@@ -3,18 +3,32 @@
 @theme {
   --color-background: var(--background);
   --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
   --color-text: var(--text);
-  --color-primary: var(--primary);
-  --color-secondary: var(--secondary);
+  --color-primary: var(--secondary);
+  --color-secondary: var(--primary);
+  --color-border: var(--border);
 }
 
 :root {
+  --background: #090909;
+  --surface: #111111;
+  --surface-elevated: #191919;
+  --text: #ffffff;
+  --primary: #e5a00d;
+  --secondary: #f96c57;
+  --border: #292929;
+}
+
+/*:root {
   --background: #05050a;
-  --surface: #0b0b10;
+  --surface: #0d0d14;
+  --surface-elevated: #14141d;
   --text: #ffffff;
   --primary: #e5a00d;
   --secondary: #f96c57ff;
-}
+  --border: #24242e;
+}*/
 
 @utility grain {
   position: relative;

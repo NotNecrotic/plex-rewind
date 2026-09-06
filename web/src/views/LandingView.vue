@@ -45,20 +45,14 @@ function signInWithPlex() {
           <button
             type="button"
             @click="signInWithPlex"
-            class="group inline-flex cursor-pointer items-center gap-3 rounded-full bg-primary px-5 py-3 text-base font-bold text-[#080808] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#e9a91a]"
+            class="group inline-flex cursor-pointer items-center gap-3 rounded-xl bg-[linear-gradient(90deg,var(--color-secondary)_0%,var(--color-secondary)_35%,var(--color-primary)_65%,var(--color-primary)_100%)] bg-[length:300%_100%] bg-[position:100%_50%] px-6 py-4 text-base font-bold text-[#080808] transition-all duration-600 hover:bg-[position:0%_50%]"
           >
-            <span
-              class="grid size-8 place-items-center rounded-full bg-black/15"
-            >
-              <Play :size="18" :stroke-width="2.5" />
-            </span>
-
             <span>Sign in with Plex</span>
 
             <ArrowRight
               :size="18"
               :stroke-width="2"
-              class="transition-transform duration-200 group-hover:translate-x-1"
+              class="transition-transform duration-300 group-hover:translate-x-1"
             />
           </button>
         </div>
@@ -75,7 +69,7 @@ function signInWithPlex() {
 
 <style scoped>
 .landing-image {
-  background-image: url("https://wallpaper.dog/large/5543674.jpg");
+  background-image: url("../assets/landing.jpg");
   background-size: cover;
   background-position: center;
 
@@ -88,12 +82,12 @@ function signInWithPlex() {
   background:
     radial-gradient(
       ellipse 42% 50% at 18% 50%,
-      rgb(from var(--color-secondary) r g b / 42%),
+      rgb(from var(--color-primary) r g b / 42%),
       transparent 70%
     ),
     radial-gradient(
       ellipse 42% 50% at 82% 50%,
-      rgb(from var(--color-primary) r g b / 38%),
+      rgb(from var(--color-secondary) r g b / 38%),
       transparent 70%
     );
 }
