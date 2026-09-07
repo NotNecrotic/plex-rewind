@@ -1,2 +1,2 @@
 # plex-rewind
-Plex year-in-review experience that turns your Plex history into a personalized rewind.
+[![wakatime](https://wakatime.com/badge/github/NotNecrotic/plex-rewind.svg)](https://wakatime.com/badge/github/NotNecrotic/plex-rewind)
