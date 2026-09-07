@@ -12,12 +12,14 @@ import { api } from "../services/api";
 import { useRouter } from "vue-router";
 import type { RewindDescriptor } from "../types";
 import { useAuth } from "../services/auth";
+import PrimaryButton from "../components/PrimaryButton.vue";
 
 const router = useRouter();
 
 const loading = ref(true);
 const { user } = useAuth();
 const rewinds = ref<RewindDescriptor[]>([]);
+// TODO: make server name a list of all pms servers the user is in.
 const serverName = ref<string | null>(null);
 const profileMenuOpen = ref(false);
 
@@ -183,13 +185,10 @@ onMounted(loadHome);
               <span class="font-bold text-white/85">{{ serverName }}</span>
             </span>
           </p>
+
           <section v-if="latest">
-            <p class="text-xs font-bold tracking-[0.25em] text-white/35">
-              LATEST
-            </p>
-            2q
             <div
-              class="mt-5 flex flex-wrap items-center justify-between gap-6 rounded-3xl border border-primary/25 bg-gradient-to-br from-white/[0.06] to-transparent p-8"
+              class="mt-4 flex flex-wrap items-center justify-between gap-6 rounded-3xl border-2 border-white/10 bg-surface p-8"
             >
               <div>
                 <div class="text-6xl font-extrabold tracking-tight">
@@ -197,18 +196,10 @@ onMounted(loadHome);
                 </div>
                 <p class="mt-3 text-white/55">{{ latest.title }}</p>
               </div>
-              <button
-                type="button"
-                class="group inline-flex items-center gap-3 rounded-full bg-primary px-6 py-4 text-sm font-bold text-black transition hover:-translate-y-0.5 hover:bg-[#f0ad18]"
+              <PrimaryButton
+                :text="`View my ${latest.year} Rewind`"
                 @click="openRewind(latest.id)"
-              >
-                <Play :size="15" fill="currentColor" /> View my
-                {{ latest.year }} Rewind
-                <ArrowRight
-                  :size="17"
-                  class="transition-transform group-hover:translate-x-1"
-                />
-              </button>
+              />
             </div>
           </section>
 
@@ -220,19 +211,17 @@ onMounted(loadHome);
             </div>
           </section>
 
-          <section v-if="rewinds.length">
-            <p class="text-xs font-bold tracking-[0.25em] text-white/35">
+          <section v-if="rewinds.length > 1">
+            <h2 class="text-xs font-bold tracking-[0.25em] text-white/35">
               YOUR HISTORY
-            </p>
-            <h2 class="mt-2 text-2xl font-bold tracking-tight">
-              Previous rewinds
             </h2>
+
             <div class="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <button
                 v-for="r in rewinds"
                 :key="r.id"
                 type="button"
-                class="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] p-6 text-left transition duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-white/[0.055]"
+                class="group relative overflow-hidden rounded-2xl border-2 border-white/10 bg-surface p-6 text-left transition duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-white/[0.055]"
                 @click="openRewind(r.id)"
               >
                 <div class="relative">

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import QuickLink from "../components/QuickLink.vue";
-import { Play, ArrowRight, BookOpen } from "@lucide/vue";
+import { BookOpen } from "@lucide/vue";
 import GithubIcon from "../components/icons/GithubIcon.vue";
 import DiscordIcon from "../components/icons/DiscordIcon.vue";
 import { useRouter } from "vue-router";
+import PrimaryButton from "../components/PrimaryButton.vue";
 
 const router = useRouter();
 
@@ -42,19 +43,7 @@ function signInWithPlex() {
         </p>
 
         <div class="mt-8">
-          <button
-            type="button"
-            @click="signInWithPlex"
-            class="group inline-flex cursor-pointer items-center gap-3 rounded-xl bg-[linear-gradient(90deg,var(--color-secondary)_0%,var(--color-secondary)_35%,var(--color-primary)_65%,var(--color-primary)_100%)] bg-[length:300%_100%] bg-[position:100%_50%] px-6 py-4 text-base font-bold text-[#080808] transition-all duration-600 hover:bg-[position:0%_50%]"
-          >
-            <span>Sign in with Plex</span>
-
-            <ArrowRight
-              :size="18"
-              :stroke-width="2"
-              class="transition-transform duration-300 group-hover:translate-x-1"
-            />
-          </button>
+          <PrimaryButton text="Sign in with Plex" @click="signInWithPlex" />
         </div>
 
         <nav class="mt-9 flex items-center justify-center gap-3">
