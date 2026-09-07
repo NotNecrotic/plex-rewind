@@ -5,43 +5,32 @@ import {
   ChevronDown,
   LogOut,
   Play,
-  LoaderCircle,
   Server,
   User,
 } from "@lucide/vue";
-import { api, type AuthUser } from "../services/api";
+import { api } from "../services/api";
 import { useRouter } from "vue-router";
 import type { RewindDescriptor } from "../types";
+import { useAuth } from "../services/auth";
 
 const router = useRouter();
 
 const loading = ref(true);
-const authenticated = ref(false);
-const user = ref<AuthUser | null>(null);
+const { user } = useAuth();
 const rewinds = ref<RewindDescriptor[]>([]);
 const serverName = ref<string | null>(null);
-const error = ref("");
 const profileMenuOpen = ref(false);
 
 const latest = computed(() => rewinds.value[0] ?? null);
 
 async function loadHome() {
   loading.value = true;
-  error.value = "";
 
   try {
-    const auth = await api.checkAuth();
-    authenticated.value = auth.authenticated;
-    user.value = auth.user ?? null;
-
-    if (!authenticated.value) return;
-
-    rewinds.value = await api.getMyRewinds();
     serverName.value = await api.getServerName();
+    rewinds.value = await api.getMyRewinds();
   } catch (err) {
     console.error("Failed to load home:", err);
-    error.value =
-      err instanceof Error ? err.message : "Unable to load your Plex Rewind.";
   } finally {
     loading.value = false;
   }
@@ -49,10 +38,6 @@ async function loadHome() {
 
 function openRewind(id: string) {
   router.push(`/rewind/${encodeURIComponent(id)}`);
-}
-
-function signIn() {
-  router.push("/auth");
 }
 
 async function signOut() {
@@ -64,7 +49,6 @@ async function signOut() {
     console.error("Sign out failed:", err);
   }
 
-  // Full reload so every piece of cached UI state resets.
   window.location.href = "/";
 }
 
@@ -177,7 +161,7 @@ onMounted(loadHome);
 
       <div class="mx-auto max-w-6xl px-6 py-14">
         <section>
-          <h1 class="mt-3 text-4xl font-extrabold tracking-tight md:text-5xl">
+          <h1 class="mt-3 text-4xl font-bold tracking-tight md:text-5xl">
             <span class="text-white/90">Welcome,</span>
             <span
               v-if="user?.username"

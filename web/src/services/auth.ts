@@ -1,7 +1,8 @@
 import { ref } from "vue";
-import { api } from "./api";
+import { api, type AuthUser } from "./api";
 
 const authenticated = ref(false);
+const user = ref<AuthUser | null>(null);
 const checked = ref(false);
 
 let checkPromise: Promise<boolean> | null = null;
@@ -14,7 +15,9 @@ export function useAuth() {
 
     checkPromise = (async () => {
       try {
-        authenticated.value = (await api.checkAuth()).authenticated;
+        const auth = await api.checkAuth();
+        authenticated.value = auth.authenticated;
+        user.value = auth.user ?? null;
         checked.value = true;
 
         return authenticated.value;
@@ -29,6 +32,7 @@ export function useAuth() {
   return {
     authenticated,
     checked,
+    user,
     checkAuthentication,
   };
 }
