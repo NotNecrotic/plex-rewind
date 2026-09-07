@@ -8,7 +8,7 @@ fs.mkdirSync(dataDirectory, { recursive: true });
 
 const databasePath = path.join(dataDirectory, "plex-rewind.db");
 
-export const db = new Database(databasePath);
+export const db: Database.Database = new Database(databasePath);
 
 db.pragma("foreign_keys = ON");
 
