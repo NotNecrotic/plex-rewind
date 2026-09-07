@@ -5,11 +5,9 @@ import { useAuth } from "./services/auth";
 
 const { checkAuthentication } = useAuth();
 
-const loading = ref(true);
 const error = ref(false);
 
 async function initializeAuthentication() {
-  loading.value = true;
   error.value = false;
 
   try {
@@ -17,7 +15,6 @@ async function initializeAuthentication() {
   } catch (err) {
     error.value = true;
   } finally {
-    loading.value = false;
   }
 }
 
@@ -26,16 +23,10 @@ onMounted(initializeAuthentication);
 
 <template>
   <div class="min-h-screen bg-background text-text">
-    <main v-if="loading" class="flex min-h-screen items-center justify-center">
-      <div class="text-center">
-        <div
-          class="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-primary"
-        />
-      </div>
-    </main>
+    <RouterView />
 
     <main
-      v-else-if="error"
+      v-if="error"
       class="flex min-h-screen items-center justify-center px-6"
     >
       <div class="text-center">
@@ -43,14 +34,12 @@ onMounted(initializeAuthentication);
 
         <button
           type="button"
-          class="mt-6 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black"
+          class="mt-6 gap-2 rounded-xl bg-white cursor-pointer px-5 py-3 text-sm font-semibold text-black transition hover:bg-white/90 active:scale-[0.99]"
           @click="initializeAuthentication"
         >
           Retry
         </button>
       </div>
     </main>
-
-    <RouterView v-else />
   </div>
 </template>
