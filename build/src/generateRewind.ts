@@ -17,6 +17,7 @@ import { join } from "node:path";
 import path from "node:path";
 import { generateAssets } from "./assets.js";
 import { generateTopMovies } from "./generate/topMovies.js";
+import { generateIntro } from "./generate/Intro.js";
 
 const collectors = [{ name: "tautulli", action: () => new TautulliClient() }];
 
@@ -125,6 +126,16 @@ const sceneGenerators: Partial<Record<Scene, SceneGenerator>> = {
       ),
       Number(ctx.user_id),
     ),
+
+  [Scene.Intro]: async (ctx) =>
+    generateIntro(
+      await requireSnapshotFile(
+        path.join(buildDir(), ctx.config.id, "snapshot"),
+        "tautulli",
+        "getHistory",
+      ),
+      Number(ctx.user_id),
+    ),
 };
 
 export async function buildRewind(
@@ -214,6 +225,5 @@ export async function generateRewind(id: string): Promise<void> {
     );
   }
 
-  // TODO: Download any needed assets and store them.
-  await generateAssets(config.id, path.join(buildDir(), config.id));
+  await generateAssets(path.join(buildDir(), config.id));
 }

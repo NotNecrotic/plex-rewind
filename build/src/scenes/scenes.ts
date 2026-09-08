@@ -2,6 +2,13 @@ import { Requirement, Scene, type SceneDefinition } from "./types.js";
 
 export const scenes: SceneDefinition[] = [
   {
+    id: Scene.Intro,
+    name: "Intro",
+    description: "Intro for the viewer before the rewind begins.",
+    requirements: [],
+  },
+
+  {
     id: Scene.TopMovies,
     name: "Top Movies",
     description: "The movies watched most during the year.",

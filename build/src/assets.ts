@@ -3,11 +3,32 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { config } from "./config/env.js";
 
-async function collectUrls(json: unknown, urls: Set<string>): Promise<void> {
+function collectUrls(json: unknown, urls: Set<string>): void {
   if (Array.isArray(json)) {
     for (const item of json) {
       collectUrls(item, urls);
-      return;
+    }
+
+    return;
+  }
+
+  if (json && typeof json === "object") {
+    for (const [key, value] of Object.entries(json)) {
+      if (
+        (key === "thumb" || key === "poster" || key === "avatar") &&
+        typeof value === "string" &&
+        value.length > 0
+      ) {
+        urls.add(value);
+      } else if (key === "thumbnails" && Array.isArray(value)) {
+        for (const thumbnail of value) {
+          if (typeof thumbnail === "string" && thumbnail.length > 0) {
+            urls.add(thumbnail);
+          }
+        }
+      }
+
+      collectUrls(value, urls);
     }
   }
 }
@@ -50,6 +71,7 @@ function rewriteUrls(json: unknown, mapping: Map<string, string>): unknown {
 
   if (json && typeof json === "object") {
     const result: Record<string, unknown> = {};
+
     for (const [key, value] of Object.entries(json)) {
       if (
         (key === "thumb" || key === "poster" || key === "avatar") &&
@@ -57,19 +79,24 @@ function rewriteUrls(json: unknown, mapping: Map<string, string>): unknown {
         mapping.has(value)
       ) {
         result[key] = mapping.get(value);
+      } else if (key === "thumbnails" && Array.isArray(value)) {
+        result[key] = value.map((thumbnail) =>
+          typeof thumbnail === "string"
+            ? (mapping.get(thumbnail) ?? thumbnail)
+            : rewriteUrls(thumbnail, mapping),
+        );
       } else {
         result[key] = rewriteUrls(value, mapping);
       }
     }
+
     return result;
   }
+
   return json;
 }
 
-export async function generateAssets(
-  rewindId: string,
-  rewindDir: string,
-): Promise<number> {
+export async function generateAssets(rewindDir: string): Promise<number> {
   const assetsDir = path.join(rewindDir, "assets");
   await mkdir(assetsDir, { recursive: true });
 
@@ -97,14 +124,6 @@ export async function generateAssets(
 
   for (const url of urls) {
     const hash = createHash("sha256").update(url).digest("hex");
-
-    const existing = Array.from(mapping.entries()).find(([source]) =>
-      createHash("sha1")
-        .update(source)
-        .digest("hex")
-        .startsWith(hash.slice(0, 8)),
-    );
-    void existing;
 
     const buffer = await downloadAsset(url);
 

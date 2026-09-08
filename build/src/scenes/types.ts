@@ -6,6 +6,7 @@ export interface SceneDefinition {
 }
 
 export enum Scene {
+  Intro = "intro",
   TopMovies = "top-movies",
   TopShows = "top-shows",
   TopUsers = "top-users",
