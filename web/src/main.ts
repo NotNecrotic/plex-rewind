@@ -7,6 +7,7 @@ import NotFoundView from "./views/NotFoundView.vue";
 import App from "./App.vue";
 import "./styles/base.css";
 import { useAuth } from "./services/auth";
+import RewindView from "./views/RewindView.vue";
 
 const routes = [
   {
@@ -31,6 +32,15 @@ const routes = [
     path: "/dashboard",
     name: "dashboard",
     component: DashboardView,
+    meta: {
+      requiresAuth: true,
+    },
+  },
+
+  {
+    path: "/rewind/:rewindId",
+    name: "rewind",
+    component: RewindView,
     meta: {
       requiresAuth: true,
     },

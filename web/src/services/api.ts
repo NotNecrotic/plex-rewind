@@ -1,4 +1,4 @@
-import { type RewindDescriptor } from "../types";
+import type { RewindData, RewindDescriptor } from "../types";
 
 export interface PlexAuthStartResponse {
   id: number;
@@ -25,6 +25,38 @@ export class ApiService {
 
   constructor(baseUrl: string = "http://localhost:3000/api") {
     this.baseUrl = baseUrl;
+  }
+
+  async getRewind(rewindId: string): Promise<RewindData> {
+    const url = `${this.baseUrl}/rewinds/${encodeURIComponent(rewindId)}/me`;
+    const response = await fetch(url, {
+      credentials: "include",
+    });
+
+    if (response.status === 404) {
+      throw new Error(
+        "No rewind is available for your account for this season.",
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch rewind: ${response.statusText}`);
+    }
+
+    return (await response.json()) as RewindData;
+  }
+
+  async getAvailableRewinds(): Promise<RewindDescriptor[]> {
+    const response = await fetch(`${this.baseUrl}/rewinds`, {
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch available rewinds");
+    }
+
+    const data = (await response.json()) as { rewinds?: RewindDescriptor[] };
+    return data.rewinds ?? [];
   }
 
   async getMyRewinds(): Promise<RewindDescriptor[]> {
@@ -105,6 +137,22 @@ export class ApiService {
     const data = (await response.json()) as { status: PlexAuthStatus };
     return data.status;
   }
+}
+
+export function artworkUrl(thumb: string | null | undefined): string | null {
+  if (!thumb) return null;
+
+  if (/^https?:\/\//i.test(thumb)) {
+    return thumb;
+  }
+
+  if (!thumb.startsWith("/")) return null;
+
+  if (thumb.startsWith("/rewind-assets/")) {
+    return thumb;
+  }
+
+  return `http://localhost:3000/api/artwork?path=${encodeURIComponent(thumb)}`;
 }
 
 export const api = new ApiService();
