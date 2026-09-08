@@ -10,7 +10,7 @@ const route = useRoute();
 const rewindId = computed(() => (route.params.rewindId as string) || "2026");
 
 const { rewind, loading, error, loadRewind } = useRewind();
-const scene = useScene(rewind);
+const sceneMeta = useScene(rewind);
 const user = useAuth().user;
 const sceneComponents: Record<string, Component> = {
   intro: defineAsyncComponent(
@@ -21,13 +21,13 @@ const sceneComponents: Record<string, Component> = {
   ),
 };
 
-const visible = computed(() => scene.visibleScenes.value);
+const visible = computed(() => sceneMeta.visibleScenes.value);
 
 function componentFor(id: string): Component {
   const component = sceneComponents[id];
 
   if (!component) {
-    throw new Error(`Unknown scene: ${id}`);
+    throw new Error(`Unknown sceneMeta: ${id}`);
   }
 
   return component;
@@ -37,7 +37,7 @@ watch(
   rewindId,
   async (id) => {
     await loadRewind(id);
-    scene.goTo(0);
+    sceneMeta.goTo(0);
   },
   { immediate: true },
 );
@@ -68,13 +68,13 @@ watch(
       <section
         v-for="(sceneDef, index) in visible"
         :key="sceneDef.id"
-        :data-scene-index="index"
+        :data-sceneMeta-index="index"
         class="relative min-h-screen w-full snap-start"
       >
         <component
           :is="componentFor(sceneDef.id)"
-          :snapshot="rewind"
-          :scene="scene"
+          :rewind="rewind"
+          :sceneMeta="sceneMeta"
           :user="user"
           class="min-h-screen w-full"
         />

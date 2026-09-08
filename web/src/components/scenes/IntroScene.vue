@@ -1,61 +1,59 @@
 ﻿<script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import type { RewindData } from "@/types";
-import { type AuthUser } from "../../services/api";
-import { gsap } from "gsap";
+import { assetUrl, type AuthUser } from "../../services/api";
+import { gsap, snap } from "gsap";
 import SplitText from "../animation/SplitText.vue";
 
 const props = defineProps<{
-  snapshot: RewindData;
-  scene: Record<string, any>;
+  rewind: RewindData;
+  sceneMeta: Record<string, any>;
   user: AuthUser;
 }>();
 
-const snapshot = props.snapshot;
+const rewind = props.rewind;
 const user = props.user;
 
 const username = computed(() => user.username);
 //const avatar = computed(() => artworkUrl(user.thumb));
-const year = computed(() => snapshot.rewind?.year ?? new Date().getFullYear());
+const year = computed(() => rewind.rewind?.year ?? new Date().getFullYear());
 
 const contentRef = ref<HTMLElement | null>(null);
 const gridRef = ref<HTMLElement | null>(null);
+console.log(props.sceneMeta);
+console.log(rewind);
+const thumbnails = computed<string[]>(() => {
+  const intro = props.rewind.scenes["intro"] as {
+    thumbnails: string;
+  };
 
-const placeholderPosters = [
-  "https://picsum.photos/seed/movie01/500/750",
-  "https://picsum.photos/seed/movie02/500/750",
-  "https://picsum.photos/seed/movie03/500/750",
-  "https://picsum.photos/seed/movie04/500/750",
-  "https://picsum.photos/seed/movie05/500/750",
-  "https://picsum.photos/seed/movie06/500/750",
-  "https://picsum.photos/seed/movie07/500/750",
-  "https://picsum.photos/seed/movie08/500/750",
-  "https://picsum.photos/seed/movie09/500/750",
-  "https://picsum.photos/seed/movie10/500/750",
-  "https://picsum.photos/seed/movie11/500/750",
-  "https://picsum.photos/seed/movie12/500/750",
-  "https://picsum.photos/seed/movie13/500/750",
-  "https://picsum.photos/seed/movie14/500/750",
-  "https://picsum.photos/seed/movie15/500/750",
-  "https://picsum.photos/seed/movie16/500/750",
-  "https://picsum.photos/seed/movie17/500/750",
-  "https://picsum.photos/seed/movie18/500/750",
-  "https://picsum.photos/seed/movie19/500/750",
-  "https://picsum.photos/seed/movie20/500/750",
-  "https://picsum.photos/seed/movie21/500/750",
-  "https://picsum.photos/seed/movie22/500/750",
-  "https://picsum.photos/seed/movie23/500/750",
-  "https://picsum.photos/seed/movie24/500/750",
-];
+  return Array.isArray(intro.thumbnails)
+    ? intro.thumbnails.filter(
+        (thumbnail): thumbnail is string =>
+          typeof thumbnail === "string" && thumbnail.length > 0,
+      )
+    : [];
+});
+console.log(thumbnails);
+const artwork = computed(() => {
+  return thumbnails.value.map((thumbnail) =>
+    assetUrl(thumbnail, rewind.rewind.year),
+  );
+});
+console.log(artwork);
 
 const rows = computed(() => {
+  if (artwork.value.length === 0) {
+    return [];
+  }
+
   const result: string[][] = [];
 
   for (let i = 0; i < 4; i++) {
-    const start = (i * 6) % placeholderPosters.length;
+    const start = (i * 6) % artwork.value.length;
 
     const row = Array.from({ length: 8 }, (_, index) => {
-      return placeholderPosters[(start + index) % placeholderPosters.length];
+      return artwork.value[(start + index) % artwork.value.length];
     });
 
     result.push(row);

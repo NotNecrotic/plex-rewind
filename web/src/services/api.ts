@@ -139,20 +139,13 @@ export class ApiService {
   }
 }
 
-export function artworkUrl(thumb: string | null | undefined): string | null {
-  if (!thumb) return null;
+export function assetUrl(
+  asset: string | null | undefined,
+  year: number,
+): string | null {
+  if (!asset) return null;
 
-  if (/^https?:\/\//i.test(thumb)) {
-    return thumb;
-  }
-
-  if (!thumb.startsWith("/")) return null;
-
-  if (thumb.startsWith("/rewind-assets/")) {
-    return thumb;
-  }
-
-  return `http://localhost:3000/api/artwork?path=${encodeURIComponent(thumb)}`;
+  return `http://localhost:3000/api/artwork?year=${year}&asset=${encodeURIComponent(asset)}`;
 }
 
 export const api = new ApiService();
