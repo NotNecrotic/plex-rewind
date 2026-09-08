@@ -1,26 +1,32 @@
 import { Router } from "express";
-import { requireAuth } from "../auth/middleware.js";
-import { fetchArtwork, isSafeArtworkPath } from "../plex/artwork.js";
+import { fetchArtwork } from "../artwork.js";
 
 const router = Router();
 
-router.get("/", requireAuth, async (req, res) => {
-  const artworkPath = req.query.path;
+router.get("/", async (req, res) => {
+  const year = req.query.year;
+  const asset = req.query.asset;
 
-  if (typeof artworkPath !== "string" || !isSafeArtworkPath(artworkPath)) {
-    res.status(400).json({ error: "Invalid artwork path" });
+  if (typeof year !== "string" || typeof asset !== "string") {
+    res.status(400).json({
+      error: "Invalid artwork request",
+    });
     return;
   }
 
   try {
-    const { contentType, body } = await fetchArtwork(artworkPath);
+    const { contentType, body } = await fetchArtwork(year, asset);
 
     res.setHeader("Content-Type", contentType);
     res.setHeader("Cache-Control", "private, max-age=86400");
-    res.send(Buffer.from(body));
+
+    res.send(body);
   } catch (error) {
-    console.error("Artwork proxy failed:", error);
-    res.status(502).json({ error: "Failed to load artwork" });
+    console.error("Artwork request failed:", error);
+
+    res.status(404).json({
+      error: "Artwork not found",
+    });
   }
 });
 
