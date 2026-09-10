@@ -15,7 +15,10 @@ function collectUrls(json: unknown, urls: Set<string>): void {
   if (json && typeof json === "object") {
     for (const [key, value] of Object.entries(json)) {
       if (
-        (key === "thumb" || key === "poster" || key === "avatar") &&
+        (key === "thumb" ||
+          key === "poster" ||
+          key === "avatar" ||
+          key === "background") &&
         typeof value === "string" &&
         value.length > 0
       ) {
@@ -74,7 +77,10 @@ function rewriteUrls(json: unknown, mapping: Map<string, string>): unknown {
 
     for (const [key, value] of Object.entries(json)) {
       if (
-        (key === "thumb" || key === "poster" || key === "avatar") &&
+        (key === "thumb" ||
+          key === "poster" ||
+          key === "avatar" ||
+          key === "background") &&
         typeof value === "string" &&
         mapping.has(value)
       ) {

@@ -1,5 +1,5 @@
 import type { TautulliHistoryItem } from "../collectors/tautulli.js";
-import { historySeconds } from "./helper.js";
+import { config } from "../config/env.js";
 
 export interface TopMovieEntry {
   rank: number;
@@ -7,19 +7,38 @@ export interface TopMovieEntry {
   title: string;
   year: number | null;
   plays: number;
-  watchTimeSeconds: number;
-  moviePercentage: number | null;
   thumb: string | null;
 }
 
-export function generateTopMovies(
+export interface TopMoviesScene {
+  movies: TopMovieEntry[];
+  background: string | null;
+}
+
+async function getMovieArt(ratingKey: number): Promise<string | null> {
+  const response = await fetch(
+    `${config.PLEX_URL}/library/metadata/${ratingKey}?X-Plex-Token=${config.PLEX_TOKEN}`,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) return null;
+
+  const data = await response.json();
+
+  return data.MediaContainer?.Metadata?.[0]?.art ?? null;
+}
+
+export async function generateTopMovies(
   history: TautulliHistoryItem[],
   userId: number,
   limit = 10,
-): TopMovieEntry[] {
+): Promise<TopMoviesScene> {
   const grouped = new Map<number, TopMovieEntry>();
   console.log(history.length, "history items for user", userId);
-  let totalMovieWatchTime = 0;
 
   for (const item of history) {
     if (item.media_type !== "movie") continue;
@@ -27,9 +46,6 @@ export function generateTopMovies(
 
     const key = Number(item.rating_key);
     if (!Number.isFinite(key)) continue;
-
-    const watchTime = historySeconds(item);
-    totalMovieWatchTime += watchTime;
 
     let entry = grouped.get(key);
     if (!entry) {
@@ -39,8 +55,6 @@ export function generateTopMovies(
         title: item.title,
         year: item.year,
         plays: 0,
-        watchTimeSeconds: 0,
-        moviePercentage: null,
         thumb: item.thumb ?? null,
       };
       grouped.set(key, entry);
@@ -50,26 +64,20 @@ export function generateTopMovies(
       entry.plays += 1;
     }
 
-    entry.watchTimeSeconds += watchTime;
-
     if (item.title) entry.title = item.title;
     if (item.year) entry.year = item.year;
     if (item.thumb) entry.thumb = item.thumb;
   }
 
-  for (const entry of grouped.values()) {
-    entry.moviePercentage =
-      totalMovieWatchTime > 0
-        ? (entry.watchTimeSeconds / totalMovieWatchTime) * 100
-        : null;
-  }
-
-  return Array.from(grouped.values())
-    .sort(
-      (a, b) =>
-        b.plays - a.plays ||
-        (b.moviePercentage ?? 0) - (a.moviePercentage ?? 0),
-    )
+  const movies = Array.from(grouped.values())
+    .sort((a, b) => b.plays - a.plays)
     .slice(0, limit)
     .map((entry, index) => ({ ...entry, rank: index + 1 }));
+
+  return {
+    background: movies[0]?.ratingKey
+      ? await getMovieArt(movies[0].ratingKey)
+      : null,
+    movies,
+  };
 }
