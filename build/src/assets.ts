@@ -52,17 +52,17 @@ async function downloadAsset(source: string): Promise<Buffer | null> {
     const response = await fetch(url);
 
     if (!response.ok) {
-      console.warn(
-        `  ! Asset download failed (${response.status}): ${source.slice(0, 80)}`,
-      );
+      //console.warn(
+      //  `  ! Asset download failed (${response.status}): ${source.slice(0, 80)}`,
+      //);
       return null;
     }
 
     return Buffer.from(await response.arrayBuffer());
   } catch (error) {
-    console.warn(
-      `  ! Asset download error: ${source.slice(0, 80)} — ${error instanceof Error ? error.message : String(error)}`,
-    );
+    //console.warn(
+    //  `  ! Asset download error: ${source.slice(0, 80)} — ${error instanceof Error ? error.message : String(error)}`,
+    //);
     return null;
   }
 }
@@ -120,11 +120,9 @@ export async function generateAssets(rewindDir: string): Promise<number> {
   }
 
   if (urls.size === 0) {
-    console.log("No assets found.");
+    //console.log("No assets found.");
     return 0;
   }
-
-  console.log(`\nCaching ${urls.size} artwork asset(s)`);
 
   const mapping = new Map<string, string>();
 
@@ -151,8 +149,6 @@ export async function generateAssets(rewindDir: string): Promise<number> {
       "utf8",
     );
   }
-
-  console.log(`  Cached ${mapping.size} asset(s) → ${assetsDir}`);
 
   return mapping.size;
 }

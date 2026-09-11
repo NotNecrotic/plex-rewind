@@ -18,6 +18,7 @@ import path from "node:path";
 import { generateAssets } from "./assets.js";
 import { generateTopMovies } from "./generate/topMovies.js";
 import { generateIntro } from "./generate/Intro.js";
+import { generateTopShows } from "./generate/topShows.js";
 
 const collectors = [{ name: "tautulli", action: () => new TautulliClient() }];
 
@@ -127,6 +128,16 @@ const sceneGenerators: Partial<Record<Scene, SceneGenerator>> = {
       Number(ctx.user_id),
     ),
 
+  [Scene.TopShows]: async (ctx) =>
+    generateTopShows(
+      await requireSnapshotFile(
+        path.join(buildDir(), ctx.config.id, "snapshot"),
+        "tautulli",
+        "getHistory",
+      ),
+      Number(ctx.user_id),
+    ),
+
   [Scene.Intro]: async (ctx) =>
     generateIntro(
       await requireSnapshotFile(
@@ -207,9 +218,11 @@ export async function generateRewind(id: string): Promise<void> {
 
   // TODO: Update eligible users to include only those who have watched content in the specified time range.
   const eligibleUsers = users.filter((user: any) => user.is_active);
-  console.log(eligibleUsers.map((user: any) => user.username));
 
   s.stop("✓ Finding eligible users");
+
+  // Generate user rewind jsons
+  s.start("Generating Rewinds");
 
   // TODO: Generate the rewind content based on the snapshot and eligible users.
   for (const user of eligibleUsers) {
@@ -225,5 +238,12 @@ export async function generateRewind(id: string): Promise<void> {
     );
   }
 
+  s.stop("✓ Generating Rewinds");
+
+  // Cache assets used in rewinds
+  s.start("Caching Assets");
+
   await generateAssets(path.join(buildDir(), config.id));
+
+  s.stop("✓ Caching Assets");
 }

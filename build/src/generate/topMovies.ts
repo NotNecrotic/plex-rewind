@@ -1,5 +1,5 @@
 import type { TautulliHistoryItem } from "../collectors/tautulli.js";
-import { config } from "../config/env.js";
+import { getItemArt } from "./helper.js";
 
 export interface TopMovieEntry {
   rank: number;
@@ -15,30 +15,12 @@ export interface TopMoviesScene {
   background: string | null;
 }
 
-async function getMovieArt(ratingKey: number): Promise<string | null> {
-  const response = await fetch(
-    `${config.PLEX_URL}/library/metadata/${ratingKey}?X-Plex-Token=${config.PLEX_TOKEN}`,
-    {
-      headers: {
-        Accept: "application/json",
-      },
-    },
-  );
-
-  if (!response.ok) return null;
-
-  const data = await response.json();
-
-  return data.MediaContainer?.Metadata?.[0]?.art ?? null;
-}
-
 export async function generateTopMovies(
   history: TautulliHistoryItem[],
   userId: number,
-  limit = 10,
+  limit = 5,
 ): Promise<TopMoviesScene> {
   const grouped = new Map<number, TopMovieEntry>();
-  console.log(history.length, "history items for user", userId);
 
   for (const item of history) {
     if (item.media_type !== "movie") continue;
@@ -76,7 +58,7 @@ export async function generateTopMovies(
 
   return {
     background: movies[0]?.ratingKey
-      ? await getMovieArt(movies[0].ratingKey)
+      ? await getItemArt(movies[0].ratingKey)
       : null,
     movies,
   };
