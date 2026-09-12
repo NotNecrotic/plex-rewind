@@ -10,8 +10,13 @@ export interface TopMovieEntry {
   title: string;
   year: number | null;
   plays: number;
-  watchTimeSeconds: number;
   thumb: string | null;
+}
+
+export interface TopMoviesScene {
+  movies: TopMovieEntry[];
+  background: string | null;
+  totalMovies: number;
 }
 
 export interface RewindUserInfo {

@@ -13,6 +13,7 @@ export interface TopMovieEntry {
 export interface TopMoviesScene {
   movies: TopMovieEntry[];
   background: string | null;
+  totalMovies: number;
 }
 
 export async function generateTopMovies(
@@ -51,6 +52,8 @@ export async function generateTopMovies(
     if (item.thumb) entry.thumb = item.thumb;
   }
 
+  const totalMovies = grouped.size;
+
   const movies = Array.from(grouped.values())
     .sort((a, b) => b.plays - a.plays)
     .slice(0, limit)
@@ -61,5 +64,6 @@ export async function generateTopMovies(
       ? await getItemArt(movies[0].ratingKey)
       : null,
     movies,
+    totalMovies,
   };
 }
