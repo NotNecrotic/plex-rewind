@@ -19,6 +19,23 @@ export interface TopMoviesScene {
   totalMovies: number;
 }
 
+export interface TopShowEntry {
+  rank: number;
+  ratingKey: number | null;
+  title: string;
+  year: number | null;
+  episodes: number;
+  seasons: number;
+  thumb: string | null;
+}
+
+export interface TopShowsScene {
+  shows: TopShowEntry[];
+  background: string | null;
+  totalShows: number;
+  totalEpisodes: number;
+}
+
 export interface RewindUserInfo {
   id: number;
   name: string;

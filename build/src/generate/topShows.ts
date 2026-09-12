@@ -15,6 +15,8 @@ export interface TopShowEntry {
 export interface TopShowsScene {
   shows: TopShowEntry[];
   background: string | null;
+  totalShows: number;
+  totalEpisodes: number;
 }
 
 async function getShowThumb(ratingKey: number): Promise<string | null> {
@@ -86,6 +88,12 @@ export async function generateTopShows(
     }
   }
 
+  const totalShows = grouped.size;
+  const totalEpisodes = Array.from(grouped.values()).reduce(
+    (total, show) => total + show.episodes,
+    0,
+  );
+
   const shows = Array.from(grouped.values())
     .sort((a, b) => b.episodes - a.episodes)
     .slice(0, limit)
@@ -99,5 +107,7 @@ export async function generateTopShows(
       ? await getItemArt(shows[0].ratingKey)
       : null,
     shows,
+    totalShows,
+    totalEpisodes,
   };
 }
