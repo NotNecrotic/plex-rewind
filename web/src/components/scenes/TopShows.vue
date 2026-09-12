@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import type { RewindData, TopShowsScene } from "@/types";
-import { gsap } from "gsap";
 import PosterReveal from "../../components/animation/PosterReveal.vue";
 import StaggerReveal from "../../components/animation/StaggerReveal.vue";
 import AnimatedNumber from "../../components/animation/AnimatedNumber.vue";
 import { assetUrl } from "../../services/api";
 import SceneBackground from "./shared/SceneBackground.vue";
 import type { SceneState } from "../../composables/useScene";
+import { useSceneAnimation } from "../../composables/useSceneAnimation";
 
 const props = defineProps<{
   rewind: RewindData;
@@ -42,284 +42,24 @@ const backgroundComponentRef = ref<InstanceType<typeof SceneBackground> | null>(
   null,
 );
 
-const hasCompleted = ref(false);
-
-let ctx: gsap.Context | null = null;
-let timeline: gsap.core.Timeline | null = null;
-
-function setFinalState() {
-  gsap.set([beat1Ref.value, beat2Ref.value], { autoAlpha: 0 });
-
-  const backgroundElement = backgroundComponentRef.value?.element;
-
-  if (heroRef.value) {
-    gsap.set(heroRef.value, {
-      y: "-20vh",
-      scale: 0.68,
-    });
-  }
-
-  if (heroContentRef.value) {
-    gsap.set(heroContentRef.value, {
-      y: 0,
-      scale: 1,
-      opacity: 1,
-    });
-  }
-
-  if (otherShowsRef.value) {
-    gsap.set(otherShowsRef.value, {
-      autoAlpha: 1,
-      y: 0,
-    });
-  }
-
-  if (finalLabelRef.value) {
-    gsap.set(finalLabelRef.value, {
-      autoAlpha: 1,
-      y: 0,
-    });
-  }
-
-  if (backgroundElement) {
-    gsap.set(backgroundElement, {
-      opacity: 0.5,
-      scale: 1,
-    });
-  }
-}
-
-function playAnimation() {
-  if (hasCompleted.value) {
-    setFinalState();
-    return;
-  }
-
-  if (!beat1Ref.value || !beat2Ref.value || !heroRef.value) return;
-
-  const backgroundElement = backgroundComponentRef.value?.element;
-
-  if (!backgroundElement) return;
-
-  timeline?.kill();
-
-  gsap.set([beat1Ref.value, beat2Ref.value], {
-    autoAlpha: 0,
-  });
-
-  gsap.set(beat1Ref.value, {
-    autoAlpha: 1,
-  });
-
-  gsap.set(heroRef.value, {
-    y: 0,
-    scale: 1,
-  });
-
-  gsap.set(heroContentRef.value, {
-    y: 40,
-    opacity: 0,
-  });
-
-  gsap.set(otherShowsRef.value, {
-    autoAlpha: 0,
-    y: 50,
-  });
-
-  gsap.set(finalLabelRef.value, {
-    autoAlpha: 0,
-    y: 25,
-  });
-
-  timeline = gsap.timeline({
-    defaults: {
-      ease: "power3.out",
-    },
-    onComplete: () => {
-      hasCompleted.value = true;
-    },
-  });
-
-  timeline
-    .fromTo(
-      beat1Ref.value,
-      { autoAlpha: 0, y: 45 },
-      { autoAlpha: 1, y: 0, duration: 1.15 },
-    )
-    .to({}, { duration: 2 })
-    .to(beat1Ref.value, {
-      autoAlpha: 0,
-      y: -30,
-      duration: 0.8,
-      ease: "power2.inOut",
-    })
-    .fromTo(
-      beat2Ref.value,
-      { autoAlpha: 0, y: 35 },
-      { autoAlpha: 1, y: 0, duration: 1 },
-      "<0.25",
-    )
-    .to({}, { duration: 1.8 })
-    .to(beat2Ref.value, {
-      autoAlpha: 0,
-      y: -30,
-      duration: 0.8,
-      ease: "power2.inOut",
-    })
-    .to(
-      heroRef.value,
-      {
-        autoAlpha: 1,
-        duration: 0.01,
-      },
-      "<",
-    )
-    .to(
-      backgroundElement,
-      {
-        opacity: 0.5,
-        scale: 1,
-        duration: 1.5,
-        ease: "power2.out",
-      },
-      "<",
-    )
-    .fromTo(
-      heroContentRef.value,
-      { y: 40, opacity: 0, scale: 0.96 },
-      { y: 0, opacity: 1, scale: 1, duration: 1.2 },
-      "<",
-    )
-    .to({}, { duration: 2.8 })
-    .to(heroRef.value, {
-      y: "-20vh",
-      scale: 0.68,
-      duration: 1.15,
-      ease: "power3.inOut",
-    })
-    .fromTo(
-      finalLabelRef.value,
-      { autoAlpha: 0, y: 25 },
-      { autoAlpha: 1, y: 0, duration: 0.7 },
-      "-=0.65",
-    )
-    .fromTo(
-      otherShowsRef.value,
-      { autoAlpha: 0, y: 45 },
-      { autoAlpha: 1, y: 0, duration: 0.95 },
-      "-=0.45",
-    );
-}
-
-function resetAnimation() {
-  hasCompleted.value = false;
-  timeline?.kill();
-  timeline = null;
-
-  if (!beat1Ref.value) return;
-
-  gsap.set(
-    [
-      beat1Ref.value,
-      beat2Ref.value,
-      heroRef.value,
-      otherShowsRef.value,
-      finalLabelRef.value,
-    ],
-    { autoAlpha: 0 },
-  );
-
-  gsap.set(heroRef.value, {
-    y: 0,
-    scale: 1,
-  });
-
-  gsap.set(heroContentRef.value, {
-    y: 40,
-    scale: 1,
-    opacity: 0,
-  });
-
-  const backgroundElement = backgroundComponentRef.value?.element;
-
-  if (backgroundElement) {
-    gsap.set(backgroundElement, {
-      opacity: 0,
-      scale: 1.08,
-    });
-  }
-}
-
-function setInitialState() {
-  gsap.set([beat1Ref.value, beat2Ref.value], {
-    autoAlpha: 0,
-  });
-
-  gsap.set(heroRef.value, {
-    y: 0,
-    scale: 1,
-  });
-
-  gsap.set(heroContentRef.value, {
-    y: 40,
-    scale: 1,
-    opacity: 0,
-  });
-
-  gsap.set(otherShowsRef.value, {
-    autoAlpha: 0,
-    y: 50,
-  });
-
-  gsap.set(finalLabelRef.value, {
-    autoAlpha: 0,
-    y: 25,
-  });
-
-  const backgroundElement = backgroundComponentRef.value?.element;
-
-  if (backgroundElement) {
-    gsap.set(backgroundElement, {
-      opacity: 0,
-      scale: 1.08,
-    });
-  }
-}
+const anim = useSceneAnimation({
+  sceneId: "top-shows",
+  rewind: props.rewind,
+  sceneMeta: props.sceneMeta,
+  beat1: beat1Ref,
+  beat2: beat2Ref,
+  hero: heroRef,
+  heroContent: heroContentRef,
+  heroFinal: { y: "-20vh", scale: 0.68 },
+  body: [
+    { ref: finalLabelRef, y: 25, duration: 0.7, at: "-=0.65" },
+    { ref: otherShowsRef, y: 45, duration: 0.95, at: "-=0.45" },
+  ],
+  background: backgroundComponentRef,
+});
 
 defineExpose({
-  resetAnimation,
-});
-
-const sceneIndex = computed(() =>
-  Object.keys(props.rewind.scenes).indexOf("top-shows"),
-);
-
-const isActive = computed(
-  () => props.sceneMeta.currentSceneIndex.value === sceneIndex.value,
-);
-
-const stopWatchingActive = watch(
-  isActive,
-  (active) => {
-    if (active) {
-      nextTick(playAnimation);
-    } else if (!hasCompleted.value) {
-      resetAnimation();
-    }
-  },
-  { immediate: true },
-);
-
-onMounted(() => {
-  ctx = gsap.context(() => {
-    setInitialState();
-  });
-});
-
-onUnmounted(() => {
-  stopWatchingActive();
-  timeline?.kill();
-  ctx?.revert();
+  resetAnimation: anim.resetAnimation,
 });
 </script>
 
