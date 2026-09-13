@@ -25,28 +25,30 @@ function signInWithPlex() {
     <div class="pointer-events-none absolute inset-0 grain" />
 
     <section
-      class="relative z-10 flex min-h-screen w-full flex-col items-center justify-center px-6 py-16 text-center"
+      class="relative z-10 flex min-h-screen w-full flex-col items-center justify-center px-4 py-10 text-center sm:px-6 sm:py-16"
     >
       <div class="flex w-full max-w-3xl flex-col items-center">
-        <div class="landing-logo mb-8 flex justify-center">
+        <div class="landing-logo mb-6 flex justify-center sm:mb-8">
           <img
             src="../assets/rewindarr.png"
-            class="block h-auto w-[38vw] object-contain"
+            class="block h-auto w-[clamp(260px,38vw,520px)] object-contain"
           />
         </div>
 
         <p
-          class="max-w-xl text-sm font-medium leading-6 text-text/60 sm:text-[1.1rem] sm:leading-7"
+          class="max-w-[90vw] text-sm font-medium leading-6 text-text/60 sm:max-w-xl sm:text-[1.1rem] sm:leading-7"
         >
           lorem ipsum dolor sit amet consectetur adipiscing elit amet anim magna
           blanditiis repellendus libero est excepturi sint dolor dignissimos
         </p>
 
-        <div class="mt-8">
+        <div class="mt-6 sm:mt-8">
           <PrimaryButton text="Sign in with Plex" @click="signInWithPlex" />
         </div>
 
-        <nav class="mt-9 flex items-center justify-center gap-3">
+        <nav
+          class="mt-7 flex items-center justify-center gap-2 sm:mt-9 sm:gap-3"
+        >
           <QuickLink href="#" label="GitHub" :icon="GithubIcon" />
           <QuickLink href="#" label="Discord" :icon="DiscordIcon" />
           <QuickLink href="#" label="Docs" :icon="BookOpen" />
@@ -116,6 +118,7 @@ function signInWithPlex() {
 @media (max-width: 768px) {
   .landing-image {
     background-position: 55% center;
+    transform: rotate(-5deg) scale(1.18);
   }
 }
 </style>

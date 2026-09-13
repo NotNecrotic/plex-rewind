@@ -60,7 +60,7 @@ const sizeClasses = {
     <!-- Poster -->
     <div
       v-if="poster"
-      class="relative rounded-xl overflow-hidden shadow-shadow-xl"
+      class="relative rounded-xl overflow-hidden shadow-2xl"
       :class="rounded ? 'rounded-xl' : 'rounded-none'"
     >
       <img

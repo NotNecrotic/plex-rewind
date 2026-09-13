@@ -2,8 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import type { RewindData } from "@/types";
 import { assetUrl, type AuthUser } from "../../services/api";
-import { gsap, snap } from "gsap";
-import SplitText from "../animation/SplitText.vue";
+import { gsap } from "gsap";
 
 const props = defineProps<{
   rewind: RewindData;
@@ -15,13 +14,11 @@ const rewind = props.rewind;
 const user = props.user;
 
 const username = computed(() => user.username);
-//const avatar = computed(() => artworkUrl(user.thumb));
 const year = computed(() => rewind.rewind?.year ?? new Date().getFullYear());
 
 const contentRef = ref<HTMLElement | null>(null);
 const gridRef = ref<HTMLElement | null>(null);
-console.log(props.sceneMeta);
-console.log(rewind);
+
 const thumbnails = computed<string[]>(() => {
   const intro = props.rewind.scenes["intro"] as {
     thumbnails: string;
@@ -30,17 +27,18 @@ const thumbnails = computed<string[]>(() => {
   return Array.isArray(intro.thumbnails)
     ? intro.thumbnails.filter(
         (thumbnail): thumbnail is string =>
-          typeof thumbnail === "string" && thumbnail.length > 0,
+          typeof thumbnail === "string" &&
+          thumbnail.length > 0 &&
+          !thumbnail.startsWith("/"), // TODO: make builder repalce reletave paths (failed asset caches) with empty strings.
       )
     : [];
 });
-console.log(thumbnails);
+
 const artwork = computed(() => {
   return thumbnails.value.map((thumbnail) =>
     assetUrl(thumbnail, rewind.rewind.year),
   );
 });
-console.log(artwork);
 
 const rows = computed(() => {
   if (artwork.value.length === 0) {
@@ -88,26 +86,6 @@ onMounted(() => {
       );
     });
 
-    const tiles = gridRef.value.querySelectorAll(".movie-tile");
-
-    gsap.set(tiles, {
-      opacity: 0,
-      scale: 1.08,
-      filter: "blur(10px)",
-    });
-
-    gsap.to(tiles, {
-      opacity: 1,
-      scale: 1,
-      filter: "blur(0px)",
-      duration: 1.15,
-      stagger: {
-        each: 0.025,
-        from: "random",
-      },
-      ease: "power3.out",
-    });
-
     if (contentRef.value) {
       gsap.fromTo(
         contentRef.value,
@@ -148,20 +126,20 @@ onMounted(() => {
         <div
           v-for="(poster, index) in row"
           :key="`a-${rowIndex}-${index}`"
-          class="movie-tile relative aspect-[2/3] w-[clamp(120px,14vw,240px)] flex-none overflow-hidden rounded-lg"
+          class="movie-tile relative aspect-2/3 w-[clamp(140px,14vw,240px)] flex-none overflow-hidden rounded-lg"
         >
           <img
             :src="poster"
             alt=""
             class="h-full w-full object-cover"
-            loading="eager"
+            loading="lazy"
           />
         </div>
 
         <div
           v-for="(poster, index) in row"
           :key="`b-${rowIndex}-${index}`"
-          class="movie-tile relative aspect-[2/3] w-[clamp(120px,14vw,240px)] flex-none overflow-hidden rounded-lg"
+          class="movie-tile relative aspect-2/3 w-[clamp(140px,14vw,240px)] flex-none overflow-hidden rounded-lg"
         >
           <img
             :src="poster"
@@ -174,62 +152,49 @@ onMounted(() => {
     </div>
 
     <div
-      class="pointer-events-none absolute inset-0 z-[3] bg-[rgb(from_var(--color-primary)_r_g_b_/_45%)]"
+      class="pointer-events-none absolute inset-0 z-3 bg-[rgb(from_var(--color-primary)_r_g_b/45%)]"
     />
 
-    <div class="pointer-events-none absolute inset-0 z-[4] bg-black/55" />
+    <div class="pointer-events-none absolute inset-0 z-4 bg-black/55" />
 
     <div
-      class="pointer-events-none absolute inset-0 z-[5] bg-[radial-gradient(ellipse_at_center,transparent_15%,rgb(0_0_0_/_35%)_65%,rgb(0_0_0_/_75%)_100%)]"
+      class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_10%,rgb(0_0_0/30%)_55%,rgb(0_0_0/80%)_100%)]"
     />
 
     <div
-      class="pointer-events-none absolute inset-x-0 bottom-0 z-[6] h-1/2 bg-gradient-to-t from-background via-background/40 to-transparent"
+      class="pointer-events-none absolute inset-x-0 bottom-0 z-6 h-1/2 bg-linear-to-t from-background via-background/40 to-transparent"
     />
 
     <div
       ref="contentRef"
-      class="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center"
+      class="relative z-10 flex h-full flex-col items-center justify-center px-4 text-center"
     >
       <div class="flex items-center gap-4">
-        <!--<div
-          v-if="avatar"
-          class="h-18 w-18 overflow-hidden rounded-full ring-2 ring-white/15"
+        <span
+          class="max-w-[90vw] text-4xl font-black leading-tight text-primary sm:text-5xl md:text-7xl"
         >
-          <img :src="avatar" alt="profile" class="h-full w-full object-cover" />
-        </div>
-
-        <div
-          v-else
-          class="grid h-18 w-18 place-items-center rounded-full bg-surface text-lg font-bold text-white/70"
-        >
-          {{ username.charAt(0).toUpperCase() }}
-        </div>-->
-
-        <span class="text-5xl font-black text-primary md:text-7xl">
           {{ username }}'s
         </span>
       </div>
 
-      <div class="mt-8">
-        <SplitText
-          :text="`PLEX REWIND ${year}`"
-          tag="h1"
-          :stagger="0.045"
-          :duration="1100"
-          :y-offset="35"
-          class="text-3xl font-black leading-[0.9] tracking-[0.085em] text-white sm:text-3xl md:text-4xl lg:text-[6rem]"
-        />
+      <div class="mt-5 sm:mt-8">
+        <h1
+          class="text-5xl font-black leading-[0.9] tracking-[0.04em] text-white sm:text-3xl md:text-4xl lg:text-[6rem]"
+        >
+          PLEX REWIND {{ year }}
+        </h1>
       </div>
 
-      <div class="mx-auto mt-9 max-w-3xl">
-        <p class="mt-4 text-xl text-white/80 md:text-2xl">
-          Here's a look at everything you watched, discovered, and loved on
-          Plex.
+      <div class="mx-auto mt-6 max-w-3xl sm:mt-9">
+        <p
+          class="mt-4 max-w-[90vw] text-base leading-relaxed text-white/80 sm:text-xl md:text-2xl"
+        >
+          Here's a look at everything you discovered, watched, and loved on Plex
+          this year.
         </p>
       </div>
 
-      <div class="mt-14">
+      <div class="mt-10 sm:mt-14">
         <div
           class="mx-auto flex w-fit animate-bounce flex-col items-center gap-2 text-white/40"
         >

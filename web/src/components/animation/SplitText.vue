@@ -63,7 +63,7 @@ onMounted(() => {
       class="inline-block"
       style="white-space: pre"
     >
-      {{ part }}
+      {{ part }}{{ split === "words" && i < parts.length - 1 ? " " : "" }}
     </span>
   </component>
 </template>

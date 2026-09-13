@@ -41,6 +41,7 @@ export interface SceneAnimationConfig {
   // The opening "beat" labels.
   beat1: Ref<HTMLElement | null>;
   beat2: Ref<HTMLElement | null>;
+  beat3: Ref<HTMLElement | null>;
   // The hero block that fills the screen, then lifts away.
   hero: Ref<HTMLElement | null>;
   // The hero's resting pose after the climax.
@@ -60,12 +61,13 @@ export interface SceneAnimationConfig {
 export interface SceneAnimation {
   playAnimation: () => void;
   resetAnimation: () => void;
+  activeBeat: Ref<number>;
 }
 
 export const useSceneAnimation = (
   options: SceneAnimationConfig,
 ): SceneAnimation => {
-  const { sceneId, rewind, sceneMeta, beat1, beat2, hero, heroContent } =
+  const { sceneId, rewind, sceneMeta, beat1, beat2, beat3, hero, heroContent } =
     options;
 
   const heroFinal = options.heroFinal;
@@ -75,6 +77,7 @@ export const useSceneAnimation = (
   const requires = options.requires ?? (() => true);
 
   const hasCompleted = ref(false);
+  const activeBeat = ref(0);
 
   let ctx: gsap.Context | null = null;
   let timeline: gsap.core.Timeline | null = null;
@@ -82,7 +85,7 @@ export const useSceneAnimation = (
   const backdrop = () => background?.value?.element;
 
   function setInitialState() {
-    gsap.set([beat1.value, beat2.value].filter(Boolean), {
+    gsap.set([beat1.value, beat2.value, beat3.value].filter(Boolean), {
       autoAlpha: 0,
     });
 
@@ -111,7 +114,7 @@ export const useSceneAnimation = (
   }
 
   function setFinalState() {
-    gsap.set([beat1.value, beat2.value].filter(Boolean), {
+    gsap.set([beat1.value, beat2.value, beat3.value].filter(Boolean), {
       autoAlpha: 0,
     });
 
@@ -148,11 +151,11 @@ export const useSceneAnimation = (
       return;
     }
 
-    if (!beat1.value || !beat2.value || !hero.value) return;
+    if (!beat1.value || !beat2.value || !beat3.value || !hero.value) return;
 
     timeline?.kill();
 
-    gsap.set([beat1.value, beat2.value].filter(Boolean), {
+    gsap.set([beat1.value, beat2.value, beat3.value].filter(Boolean), {
       autoAlpha: 0,
     });
 
@@ -180,17 +183,25 @@ export const useSceneAnimation = (
     });
 
     timeline
+      .call(() => {
+        activeBeat.value = 1;
+      })
       .fromTo(
         beat1.value,
         { autoAlpha: 0, y: 45 },
         { autoAlpha: 1, y: 0, duration: 1.15 },
       )
-      .to({}, { duration: 2 })
+      .to({}, { duration: 1.8 })
       .to(beat1.value, {
         autoAlpha: 0,
         y: -30,
         duration: 0.8,
         ease: "power2.inOut",
+      })
+
+      // Beat 2 — stats
+      .call(() => {
+        activeBeat.value = 2;
       })
       .fromTo(
         beat2.value,
@@ -198,12 +209,35 @@ export const useSceneAnimation = (
         { autoAlpha: 1, y: 0, duration: 1 },
         "<0.25",
       )
-      .to({}, { duration: 1.8 })
+      .to({}, { duration: 3 })
       .to(beat2.value, {
         autoAlpha: 0,
         y: -30,
         duration: 0.8,
         ease: "power2.inOut",
+      })
+
+      // Beat 3 — favorites
+      .call(() => {
+        activeBeat.value = 3;
+      })
+      .fromTo(
+        beat3.value,
+        { autoAlpha: 0, y: 35 },
+        { autoAlpha: 1, y: 0, duration: 1 },
+        "<0.25",
+      )
+      .to({}, { duration: 2.2 })
+      .to(beat3.value, {
+        autoAlpha: 0,
+        y: -30,
+        duration: 0.8,
+        ease: "power2.inOut",
+      })
+
+      // Beat 4 — hero
+      .call(() => {
+        activeBeat.value = 4;
       })
       .to(hero.value, { autoAlpha: 1, duration: 0.01 }, "<");
 
@@ -258,6 +292,7 @@ export const useSceneAnimation = (
 
   function resetAnimation() {
     hasCompleted.value = false;
+    activeBeat.value = 0;
     timeline?.kill();
     timeline = null;
     setInitialState();
@@ -298,5 +333,6 @@ export const useSceneAnimation = (
   return {
     playAnimation,
     resetAnimation,
+    activeBeat,
   };
 };

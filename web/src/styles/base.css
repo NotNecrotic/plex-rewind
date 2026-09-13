@@ -17,18 +17,13 @@
   --text: #ffffff;
   --primary: #e5a00d;
   --secondary: #f96c57;
-  --border: #292929;
+  --border: #ffffff1a;
 }
 
-/*:root {
-  --background: #05050a;
-  --surface: #0d0d14;
-  --surface-elevated: #14141d;
-  --text: #ffffff;
-  --primary: #e5a00d;
-  --secondary: #f96c57ff;
-  --border: #24242e;
-}*/
+html,
+body {
+  background-color: var(--background);
+}
 
 @utility grain {
   position: relative;
