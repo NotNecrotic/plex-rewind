@@ -23,7 +23,7 @@ export interface AuthStatusResponse {
 export class ApiService {
   private baseUrl: string;
 
-  constructor(baseUrl: string = "http://localhost:3000/api") {
+  constructor(baseUrl: string = "/api") {
     this.baseUrl = baseUrl;
   }
 
@@ -145,7 +145,7 @@ export function assetUrl(
 ): string | null {
   if (!asset) return null;
 
-  return `http://localhost:3000/api/artwork?year=${year}&asset=${encodeURIComponent(asset)}`;
+  return `/api/artwork?year=${year}&asset=${encodeURIComponent(asset)}`;
 }
 
 export const api = new ApiService();
