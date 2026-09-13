@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch, onMounted, onUnmounted } from "vue";
 import type { RewindData, TopShowsScene } from "@/types";
 import PosterReveal from "../../components/animation/PosterReveal.vue";
 import StaggerReveal from "../../components/animation/StaggerReveal.vue";
@@ -8,6 +8,7 @@ import { assetUrl } from "../../services/api";
 import SceneBackground from "./shared/SceneBackground.vue";
 import type { SceneState } from "../../composables/useScene";
 import { useSceneAnimation } from "../../composables/useSceneAnimation";
+import { useSceneAudio } from "../../composables/useSceneAudio.ts";
 
 const props = defineProps<{
   rewind: RewindData;
@@ -62,8 +63,45 @@ const anim = useSceneAnimation({
   background: backgroundComponentRef,
 });
 
+const themeUrl = computed(() =>
+  assetUrl(topShowsScene.value.theme, year.value),
+);
+
+const {
+  play: playTheme,
+  stop: stopTheme,
+  unlock: unlockTheme,
+} = useSceneAudio(themeUrl, {
+  volume: 0.2,
+  fadeIn: 1200,
+  fadeOut: 2000,
+});
+
+watch(anim.activeBeat, (beat) => {
+  if (beat === 4) {
+    playTheme();
+  }
+});
+
+watch(
+  () => props.sceneMeta.currentScene.value.id,
+  (scene) => {
+    if (scene !== "top-shows") {
+      stopTheme();
+    }
+  },
+);
+
 defineExpose({
   resetAnimation: anim.resetAnimation,
+});
+
+onMounted(() => {
+  window.addEventListener("rewind-start", unlockTheme);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("rewind-start", unlockTheme);
 });
 </script>
 
@@ -232,7 +270,7 @@ defineExpose({
                 <div
                   class="absolute left-0.5 top-0.5 flex size-6 items-center justify-center rounded-full bg-black/65 text-[10px] font-display font-black text-white backdrop-blur-md border border-border sm:left-2 sm:top-2 sm:size-7 sm:text-xs"
                 >
-                  {{ show.rank }}
+                  #{{ show.rank }}
                 </div>
               </div>
 

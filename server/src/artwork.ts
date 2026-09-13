@@ -11,7 +11,11 @@ export async function fetchArtwork(
     throw new Error("Invalid asset filename");
   }
 
-  const assetPath = path.resolve(REWINDS_DIR, year, "assets", `${asset}`);
+  const extension = path.extname(asset).toLowerCase();
+
+  const assetType = extension === ".mp3" ? "audio" : "images";
+
+  const assetPath = path.resolve(REWINDS_DIR, year, "assets", assetType, asset);
 
   const buildsRoot = path.resolve(REWINDS_DIR);
 
@@ -21,8 +25,10 @@ export async function fetchArtwork(
 
   const body = await readFile(assetPath);
 
+  const contentType = extension === ".mp3" ? "audio/mpeg" : "image/jpeg";
+
   return {
-    contentType: "image/jpeg",
+    contentType,
     body,
   };
 }

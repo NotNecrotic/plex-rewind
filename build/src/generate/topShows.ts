@@ -15,6 +15,7 @@ export interface TopShowEntry {
 export interface TopShowsScene {
   shows: TopShowEntry[];
   background: string | null;
+  theme: string | null;
   totalShows: number;
   totalEpisodes: number;
 }
@@ -34,6 +35,23 @@ async function getShowThumb(ratingKey: number): Promise<string | null> {
   const data = await response.json();
 
   return data.MediaContainer?.Metadata?.[0]?.grandparentThumb ?? null;
+}
+
+async function getShowTheme(ratingKey: number): Promise<string | null> {
+  const response = await fetch(
+    `${config.PLEX_URL}/library/metadata/${ratingKey}?X-Plex-Token=${config.PLEX_TOKEN}`,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) return null;
+
+  const data = await response.json();
+
+  return data.MediaContainer?.Metadata?.[0]?.theme ?? null;
 }
 
 export async function generateTopShows(
@@ -102,10 +120,13 @@ export async function generateTopShows(
       rank: index + 1,
     }));
 
+  const showTheme = await getShowTheme(Number(shows[0]?.ratingKey));
+
   return {
     background: shows[0]?.ratingKey
       ? await getItemArt(shows[0].ratingKey)
       : null,
+    theme: showTheme,
     shows,
     totalShows,
     totalEpisodes,

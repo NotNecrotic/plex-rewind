@@ -3,66 +3,80 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { config } from "./config/env.js";
 
-function collectUrls(json: unknown, urls: Set<string>): void {
+type AssetType = "image" | "audio";
+
+interface AssetDefinition {
+  type: AssetType;
+  keys: readonly string[];
+  extension: string;
+  directory: string;
+}
+
+const ASSET_DEFINITIONS: readonly AssetDefinition[] = [
+  {
+    type: "image",
+    keys: ["thumb", "poster", "avatar", "background"],
+    extension: ".jpg",
+    directory: "images",
+  },
+  { type: "audio", keys: ["theme"], extension: ".mp3", directory: "audio" },
+];
+
+const KEY_MAPPINGS = new Map(
+  ASSET_DEFINITIONS.flatMap((definition) =>
+    definition.keys.map((key) => [key, definition] as const),
+  ),
+);
+
+interface AssetReference {
+  source: string;
+  type: AssetType;
+}
+
+function collectAssets(
+  json: unknown,
+  assets: Map<string, AssetReference>,
+): void {
   if (Array.isArray(json)) {
     for (const item of json) {
-      collectUrls(item, urls);
+      collectAssets(item, assets);
     }
-
     return;
   }
-
-  if (json && typeof json === "object") {
-    for (const [key, value] of Object.entries(json)) {
-      if (
-        (key === "thumb" ||
-          key === "poster" ||
-          key === "avatar" ||
-          key === "background") &&
-        typeof value === "string" &&
-        value.length > 0
-      ) {
-        urls.add(value);
-      } else if (key === "thumbnails" && Array.isArray(value)) {
-        for (const thumbnail of value) {
-          if (typeof thumbnail === "string" && thumbnail.length > 0) {
-            urls.add(thumbnail);
-          }
+  if (!json || typeof json !== "object") {
+    return;
+  }
+  for (const [key, value] of Object.entries(json)) {
+    const definition = KEY_MAPPINGS.get(key);
+    if (definition && typeof value === "string" && value.length > 0) {
+      assets.set(value, { source: value, type: definition.type });
+    } else if (key === "thumbnails" && Array.isArray(value)) {
+      for (const thumbnail of value) {
+        if (typeof thumbnail === "string" && thumbnail.length > 0) {
+          assets.set(thumbnail, { source: thumbnail, type: "image" });
         }
       }
-
-      collectUrls(value, urls);
     }
+    collectAssets(value, assets);
   }
 }
 
 async function downloadAsset(source: string): Promise<Buffer | null> {
   let url: string;
-
   if (/^https?:\/\//i.test(source)) {
     url = source;
   } else if (source.startsWith("/")) {
-    // Relative Plex artwork path requires plex token.
     url = `${config.PLEX_URL.replace(/\/$/, "")}${source}?X-Plex-Token=${encodeURIComponent(config.PLEX_TOKEN)}`;
   } else {
     return null;
   }
-
   try {
     const response = await fetch(url);
-
     if (!response.ok) {
-      //console.warn(
-      //  `  ! Asset download failed (${response.status}): ${source.slice(0, 80)}`,
-      //);
       return null;
     }
-
     return Buffer.from(await response.arrayBuffer());
-  } catch (error) {
-    //console.warn(
-    //  `  ! Asset download error: ${source.slice(0, 80)} — ${error instanceof Error ? error.message : String(error)}`,
-    //);
+  } catch {
     return null;
   }
 }
@@ -71,74 +85,63 @@ function rewriteUrls(json: unknown, mapping: Map<string, string>): unknown {
   if (Array.isArray(json)) {
     return json.map((item) => rewriteUrls(item, mapping));
   }
-
-  if (json && typeof json === "object") {
-    const result: Record<string, unknown> = {};
-
-    for (const [key, value] of Object.entries(json)) {
-      if (
-        (key === "thumb" ||
-          key === "poster" ||
-          key === "avatar" ||
-          key === "background") &&
-        typeof value === "string" &&
-        mapping.has(value)
-      ) {
-        result[key] = mapping.get(value);
-      } else if (key === "thumbnails" && Array.isArray(value)) {
-        result[key] = value.map((thumbnail) =>
-          typeof thumbnail === "string"
-            ? (mapping.get(thumbnail) ?? thumbnail)
-            : rewriteUrls(thumbnail, mapping),
-        );
-      } else {
-        result[key] = rewriteUrls(value, mapping);
-      }
-    }
-
-    return result;
+  if (!json || typeof json !== "object") {
+    return json;
   }
-
-  return json;
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(json)) {
+    const definition = KEY_MAPPINGS.get(key);
+    if (definition && typeof value === "string" && mapping.has(value)) {
+      result[key] = mapping.get(value);
+    } else if (key === "thumbnails" && Array.isArray(value)) {
+      result[key] = value.map((thumbnail) =>
+        typeof thumbnail === "string"
+          ? (mapping.get(thumbnail) ?? thumbnail)
+          : rewriteUrls(thumbnail, mapping),
+      );
+    } else {
+      result[key] = rewriteUrls(value, mapping);
+    }
+  }
+  return result;
 }
 
 export async function generateAssets(rewindDir: string): Promise<number> {
   const assetsDir = path.join(rewindDir, "assets");
   await mkdir(assetsDir, { recursive: true });
-
   const files = (await readdir(path.join(rewindDir, "users"))).filter((file) =>
     file.endsWith(".json"),
   );
-
-  const urls = new Set<string>();
-
+  const assets = new Map<string, AssetReference>();
   for (const file of files) {
     const json: unknown = JSON.parse(
       await readFile(path.join(rewindDir, "users", file), "utf-8"),
     );
-    collectUrls(json, urls);
+    collectAssets(json, assets);
   }
-
-  if (urls.size === 0) {
-    //console.log("No assets found.");
+  if (assets.size === 0) {
     return 0;
   }
-
   const mapping = new Map<string, string>();
-
-  for (const url of urls) {
-    const hash = createHash("sha256").update(url).digest("hex");
-
-    const buffer = await downloadAsset(url);
-
-    if (!buffer) continue;
-
-    const fileName = `${hash}.jpg`;
-    await writeFile(path.join(assetsDir, fileName), buffer);
-    mapping.set(url, fileName);
+  for (const asset of assets.values()) {
+    const hash = createHash("sha256").update(asset.source).digest("hex");
+    const definition = ASSET_DEFINITIONS.find(
+      (item) => item.type === asset.type,
+    );
+    if (!definition) {
+      continue;
+    }
+    const buffer = await downloadAsset(asset.source);
+    if (!buffer) {
+      continue;
+    }
+    const fileName = `${hash}${definition.extension}`;
+    const relativePath = fileName;
+    const outputDir = path.join(assetsDir, definition.directory);
+    await mkdir(outputDir, { recursive: true });
+    await writeFile(path.join(outputDir, fileName), buffer);
+    mapping.set(asset.source, relativePath.replaceAll("\\", "/"));
   }
-
-  // Replace URLs in user JSON files with local asset paths
   for (const file of files) {
     const filePath = path.join(rewindDir, "users", file);
     const json = JSON.parse(await readFile(filePath, "utf8"));
@@ -149,6 +152,5 @@ export async function generateAssets(rewindDir: string): Promise<number> {
       "utf8",
     );
   }
-
   return mapping.size;
 }

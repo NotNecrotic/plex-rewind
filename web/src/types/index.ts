@@ -32,6 +32,7 @@ export interface TopShowEntry {
 export interface TopShowsScene {
   shows: TopShowEntry[];
   background: string | null;
+  theme: string | null;
   totalShows: number;
   totalEpisodes: number;
 }

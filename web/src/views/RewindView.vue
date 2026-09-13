@@ -4,6 +4,7 @@ import {
   defineAsyncComponent,
   nextTick,
   onBeforeUnmount,
+  onMounted,
   ref,
   type Component,
   type ComponentPublicInstance,
@@ -37,6 +38,18 @@ const visible = computed(() => sceneMeta.visibleScenes.value);
 
 const containerRef = ref<HTMLElement | null>(null);
 const sectionRefs = ref<Record<number, HTMLElement>>({});
+
+function handleFirstInteraction() {
+  window.dispatchEvent(new Event("rewind-start"));
+
+  document.body.removeEventListener("touchstart", handleFirstInteraction);
+}
+
+onMounted(() => {
+  document.body.addEventListener("touchstart", handleFirstInteraction, {
+    passive: true,
+  });
+});
 
 function sectionRefFor(index: number) {
   return (el: Element | ComponentPublicInstance | null) => {
@@ -108,6 +121,8 @@ watch(
 onBeforeUnmount(() => {
   sceneObserver?.disconnect();
   sceneObserver = null;
+
+  document.body.removeEventListener("touchstart", handleFirstInteraction);
 });
 </script>
 
