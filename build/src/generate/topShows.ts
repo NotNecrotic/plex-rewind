@@ -1,6 +1,6 @@
 import type { TautulliHistoryItem } from "../collectors/tautulli.js";
 import { config } from "../config/env.js";
-import { getItemArt } from "./helper.js";
+import { getItemArt, getTheme } from "./helper.js";
 
 export interface TopShowEntry {
   rank: number;
@@ -35,23 +35,6 @@ async function getShowThumb(ratingKey: number): Promise<string | null> {
   const data = await response.json();
 
   return data.MediaContainer?.Metadata?.[0]?.grandparentThumb ?? null;
-}
-
-async function getShowTheme(ratingKey: number): Promise<string | null> {
-  const response = await fetch(
-    `${config.PLEX_URL}/library/metadata/${ratingKey}?X-Plex-Token=${config.PLEX_TOKEN}`,
-    {
-      headers: {
-        Accept: "application/json",
-      },
-    },
-  );
-
-  if (!response.ok) return null;
-
-  const data = await response.json();
-
-  return data.MediaContainer?.Metadata?.[0]?.theme ?? null;
 }
 
 export async function generateTopShows(
@@ -120,7 +103,7 @@ export async function generateTopShows(
       rank: index + 1,
     }));
 
-  const showTheme = await getShowTheme(Number(shows[0]?.ratingKey));
+  const showTheme = await getTheme(Number(shows[0]?.ratingKey));
 
   return {
     background: shows[0]?.ratingKey

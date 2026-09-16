@@ -26,3 +26,20 @@ export async function getItemArt(ratingKey: number): Promise<string | null> {
 
   return data.MediaContainer?.Metadata?.[0]?.art ?? null;
 }
+
+export async function getTheme(ratingKey: number): Promise<string | null> {
+  const response = await fetch(
+    `${config.PLEX_URL}/library/metadata/${ratingKey}?X-Plex-Token=${config.PLEX_TOKEN}`,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) return null;
+
+  const data = await response.json();
+
+  return data.MediaContainer?.Metadata?.[0]?.theme ?? null;
+}
